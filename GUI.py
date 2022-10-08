@@ -42,14 +42,16 @@ def generate_trajectory(arr):
     #135,420
     test = np.array(np.where(arr==0))
     #subtract 250 from the x and ydirection:
-    test = np.subtract(test, 250)
+    test[0] = np.subtract(250,test[0])
+    test[1] = np.subtract(test[1],250)
     test = np.multiply(test, 8/250.0)
+    test[[0,1]] = test[[1,0]]
     print("TIMES:-------------")
     print(len(times))
     print("TEST:-----------------")
     test = np.vstack([test, times])
     print(test)
-
+    print(test.shape)
     np.savetxt("trajectory.csv", test, delimiter=",")
 
 def sg_filter(arr, n_dem):
