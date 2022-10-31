@@ -32,11 +32,11 @@ ax0.add_patch(Rectangle((2,6), 4, 2, alpha = 0.5,color="#4dcc4d"))
             head_width=0.008, head_length=0.01)    """
 
 
-for i in range(200):
-    for j in range(200):
-        if (i*200+j) %1000 == 0:
-            print('generating vector:', i*200+j)
-        x_dot = ds[:,i*200+j]
+for i in range(50):
+    for j in range(50):
+        if (i*50+j) %1000 == 0:
+            print('generating vector:', i*50+j)
+        x_dot = ds[:,i*50+j]
         x_dot_norm = x_dot/(x_dot[0]**2+x_dot[1]**2)**(1/2)*0.02
-        plt.arrow(meshgrid[0,i*200+j],meshgrid[1,i*200+j], x_dot_norm[0], x_dot_norm[1], head_width = 0.008,head_length = 0.01)
+        plt.arrow(meshgrid[0,i*50+j],meshgrid[1,i*50+j], x_dot_norm[0], x_dot_norm[1], head_width = 0.008,head_length = 0.01)
 plt.show()
