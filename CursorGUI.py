@@ -115,10 +115,3 @@ for traj in traj_list:
     np.savetxt(filename,traj,delimiter=',')
 
 #This section segments the data
-segs = {0:np.empty((4,1)), 1: np.empty((4,1)), 2: np.empty((4,1))}
-for traj in derivs_list:
-    segment_data(traj, regions, segs)
-for key, val in segs.items:
-    DIR = '/Users/MonicaChan/Desktop/UROP/Python Implementation/segments'
-    filename = DIR + str(key) + "seg.csv"
-    np.savetxt(filename, val, delimiter= ',')
