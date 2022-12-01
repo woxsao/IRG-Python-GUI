@@ -58,6 +58,7 @@ drawn_data = np.empty((4,1))
 files = glob.glob('/Users/MonicaChan/Desktop/UROP/Python Implementation/trajectory_data/*')
 for f in files:
     os.remove(f)
+derivs_list = []
 for traj in traj_list:
     x = traj[0,:]
     y = traj[1,:]
@@ -66,12 +67,4 @@ for traj in traj_list:
     x_obs = np.transpose(traj[:2,:])
     dx_nth = sgolay_time_derivatives(x_obs, dt, 2,3,15)
     drawn_data = np.row_stack((np.transpose(dx_nth[:,:,1]), np.transpose(dx_nth[:,:,2])))
-    print(drawn_data[:,:4])
-        #print(dx[:,0])
-    #dy = np.array(savgol_filter(y, window_length = 15, polyorder = 3, deriv = 2, delta = dt))
-    #traj = np.vstack((traj[0:2, :], dx,dy))
-    #derivs_list.append(traj)
-    #DIR = '/Users/MonicaChan/Desktop/UROP/Python Implementation/trajectory_data'
-    #traj_num =  len([name for name in os.listdir(DIR) if os.path.isfile(os.path.join(DIR, name))])
-    #filename = "/Users/MonicaChan/Desktop/UROP/Python Implementation/trajectory_data/deriv" + str(traj_num) + ".csv"
-    #np.savetxt(filename,traj,delimiter=',')
+    derivs_list.append(drawn_data)
