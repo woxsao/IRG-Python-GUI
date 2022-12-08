@@ -73,7 +73,7 @@ def sgolay_time_derivatives(x, dt, nth_order, n_polynomial, window_size):
     """
     if(x.shape[0] < window_size):
         raise ValueError("Window size is too big for data")
-    g = pd.read_csv(os.getcwd()+"/Python Implementation/sgolay.csv", header = None).to_numpy()
+    g = pd.read_csv(os.getcwd()+"/IRG-Python-GUI-main/sgolay.csv", header = None).to_numpy()
     d_nth_x = np.empty((x.shape[0],x.shape[1],nth_order+2))
     for dim in range(x.shape[1]):
         y = np.transpose(x[:, dim])
