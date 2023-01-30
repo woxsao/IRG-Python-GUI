@@ -8,8 +8,8 @@ import glob
 import csv
 from scipy.interpolate import interp2d
 
-ds = np.genfromtxt("/Users/MonicaChan/Desktop/UROP/Python Implementation/ds_vector_fields/ds1.csv", delimiter=',')
-meshgrid = np.genfromtxt("/Users/MonicaChan/Desktop/UROP/Python Implementation/ds_vector_fields/meshgrid.csv", delimiter=',')
+ds = np.genfromtxt("/Users/MonicaChan/Desktop/UROP/IRG-Python-GUI-main/ds_vector_fields/ds1.csv", delimiter=',')
+meshgrid = np.genfromtxt("/Users/MonicaChan/Desktop/UROP/IRG-Python-GUI-main/ds_vector_fields/meshgrid.csv", delimiter=',')
 print(ds.shape)
 print(meshgrid.shape)
 
