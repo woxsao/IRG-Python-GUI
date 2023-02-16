@@ -86,7 +86,7 @@ def lpv_ds(x, ds_gmm, A_g, b_g,filenum):
             f_g = A_g @ x[:, i] + b_g
         x_dot[:, i] = f_g
 
-
+    print('x dot',x_dot)
     return x_dot
 
 def posterior_probs_gmm(x, gmm, type):
@@ -169,126 +169,24 @@ def vector_field(x,y,pol):
     global ds_debug
     pt = np.reshape(np.stack((y,x)),(2,1))
     print('policy', pol)
-    return ds_debug[0](pt)
-
-def start_simulation_ltl(policies, transition, opt_sim):
-    global X,Y
-    curr_mode = 1
+    return pol(pt)
+def start_simulation_ltl(policies, transition, opt_sim, curr_mode):
     atts = opt_sim["atts"]
     start = opt_sim["start"]
     fig, ax = plot_ap()
     hs = []
-    #curr_mode, task_succ, target_mode= transition(curr_mode, start, objs, atts)
-    hs,vec_field = plot_multi_mode(hs,policies[curr_mode-1],[-8,8,-8,8],atts[curr_mode-1],[],[],[])
-    time_step = 1
-    start = np.reshape(start,(2,1))
-    x_to_plot = start
-    mod_policies = []
-    for k in range(4):
-        mod_policies.append(policies[k])
-    line, = ax.plot(X, Y, 'g', lw=2)
-    
-    def update(frame,x_to_plot,curr_mode):
-        global X,Y
-        pt = np.reshape(np.stack((x_to_plot[1,0],x_to_plot[0,0])),(2,1))
-        vel = policies[curr_mode-1](pt)
-        dx, dy = vel[0,:], vel[1,:]
-        
-        x_ = x_to_plot[0,0]
-        y = x_to_plot[1,0]
-        x_ += dx * 0.01
-        y += dy * 0.01
-        x_to_plot = np.vstack((x_,y))
-        X.append(x_)
-        Y.append(y)
-        line.set_data(X[:frame], Y[:frame])
-        return x_to_plot
-    start_time = time.time() 
-    curr_mode, task_succ, target_mode = transition(curr_mode, start, objs, atts)
-    while time_step >0:
-        #print('curr mode', curr_mode)
-        x_to_plot = update(time_step,x_to_plot,curr_mode)
-        if not task_succ:
-            next_mode, task_succ, desired_plan = transition(curr_mode, x_to_plot, objs, atts)
-            #print("next mode:", next_mode)
-            if not task_succ and next_mode != curr_mode:
-                fig,ax = plot_ap()
-                X = X[-1:]
-                Y = Y[-1:]
-                line, = ax.plot(X, Y, 'g', lw=2)
-                hs = plot_multi_mode([], mod_policies[next_mode-1], limits, atts[next_mode-1],"visited","failure","cut normals")
-                #print("MDOE TRANSITIONONONONON")
-                curr_mode = next_mode
-        plt.draw()
-        plt.pause(0.01)
-        time_step +=1
-    return fig,ax, vec_field,policies[curr_mode-1]
-def inap(x, obj, att):
-    pos = obj["pos"]
-    vertices = np.array([
-        pos[:2], #top left
-        [pos[0] + pos[2], pos[1]], #bottom left
-        [pos[0], pos[1] + pos[3]], #top right
-        [pos[0] + pos[2], pos[1] + pos[3]] #bottom right
-    ])
-    b = is_point_inside_rectangle(x, vertices)
-    norm_diff = np.linalg.norm(x - att)
-    #print("vertices:", vertices, "x: ",x)
-    #print("b",b)
-    return b or norm_diff < 0.4
-
-def is_point_inside_rectangle(point, vertices):
-    x, y = point[0,0], point[1,0]
-    x_min, x_max = min(vertices[:, 0]), max(vertices[:, 0])
-    y_min, y_max = min(vertices[:, 1]), max(vertices[:, 1])
-    return x_min <= x <= x_max and y_min <= y <= y_max
-
-
-def automaton_scoop(curr_mode, x, objs, atts):
-    desired_plan = [2, 3, 4, 4]
-    sensor = 1
-    task_succ = 0
-  
-    for i in range(1,len(objs)):
-        if inap(x, objs[i-1], atts[i-1]):
-            sensor = i+1
-    #reaching
-    if curr_mode == 1:
-        if sensor == 2:
-            next_mode = 2
-        else:
-            next_mode = 1
-    #scooping
-    elif curr_mode == 2:
-        if sensor == 3:
-            next_mode = 3
-        elif sensor == 1:
-            next_mode = 1
-        else:
-            next_mode = 2
-    #transport
-    elif curr_mode == 3:
-        if sensor == 1:
-            next_mode = 1
-        elif sensor == 2:
-            next_mode = 2
-        elif sensor == 3:
-            next_mode = 3
-        elif sensor == 4:
-            next_mode = 4
-            task_succ = 1
-        else:
-            raise ValueError(f"Wrong mode transition: {curr_mode} -> {sensor}")
-    #success
-    elif curr_mode == 4:
-        next_mode = 4
-        task_succ = 1
-    else:
-        raise ValueError(f"Wrong mode transition: {curr_mode} -> {sensor}")
-  
-    return next_mode, task_succ, desired_plan
-
-
+    print('policies[curr_mode]', policies[curr_mode])
+    hs,vec_field = plot_multi_mode(hs,policies[curr_mode],[-8,8,-8,8],atts[curr_mode],[],[],[])
+    return fig,ax, vec_field,policies[curr_mode]
+def update(frame):
+    global x, y, X, Y,new_pol
+    dx, dy = vector_field(x, y,new_pol)
+    x += dx * 0.01
+    y += dy * 0.01
+    X.append(x)
+    Y.append(y)
+    line.set_data(X[:frame], Y[:frame])
+    return line,
 
 
 """====================================MAIN CODE========================================================================"""
@@ -313,19 +211,15 @@ for f in sorted(files):
     ds = loadmat(filename)
     ds_list.append(ds)
     ds["ds_lpv"] = closure(i)
+    print('identity:', ds["ds_lpv"])
     models.append(ds.copy())
     #hs = plot_ds_model(ds["ds_lpv"], ds["att"], i, limits,'low')
     
     i+=1
-
-print("models", models[0]["b_k"],models[1]["b_k"],models[2]["b_k"])
-
-#TODO: If I cahnge b to i it works, for some reason b doesn't work, weird pass by reference issue potentially
-ds_debug = []
+#plt.close()
+#start of sims
 for i in range(3):
-    ds_debug.append(lambda x,i=i: lpv_ds(x,models[i]["ds_gmm"],models[i]["A_k"], models[i]["b_k"],i))
-    print("identity:", ds_debug[i])
-ds_debug.append(ds_debug[-1])
+    ds_debug.append(lambda x,i=i: lpv_ds(x, models[i]["ds_gmm"], models[i]["A_k"], models[i]["b_k"],i))
 segs = []
 files = glob.glob(directory + "/seg0*")
 for f in sorted(files):
@@ -341,13 +235,13 @@ for f in sorted(files):
     seg['dt'] = s[5][0,0]
     segs.append(seg)
 
-
 opt_sim = {}
 opt_sim["dt"] = 0.005
 opt_sim["i_max"] = 10000
 opt_sim["tol"] = 0.001
 opt_sim["plot"] = 0
 opt_sim["start"] = segs[0]["x0_all"][:,0]
+#opt_sim["start"] = [-8,-8]
 
 atts = []
 for i in range(3):
@@ -358,9 +252,9 @@ opt_sim["if_mod"] = 1
 opt_sim["if_plot"] = 1
 opt_sim["add_noise"] = 0
 
-transition = lambda mode,x,objs,atts: automaton_scoop(mode,x,objs,atts)
+#transition = lambda mode,x,objs,atts: automaton_scoop(mode,x,objs,atts)
 
-"""for i in range(len(ds_debug)):
+for i in range(len(ds_debug)):
     T = 50
     dt = 0.01
     x0 = opt_sim["start"][0]
@@ -369,11 +263,13 @@ transition = lambda mode,x,objs,atts: automaton_scoop(mode,x,objs,atts)
     y = y0
     X = [x0]
     Y = [y0]
-    fig,ax,_, new_pol = start_simulation_ltl(ds_debug,transition, opt_sim)
+    fig,ax,_, new_pol = start_simulation_ltl(ds_debug,"transition", opt_sim,i)
     line, = ax.plot(X, Y, 'g', lw=2)
     def update(frame):
         global x, y, X, Y, new_pol
+        #print("x", x, 'y',y)
         dx, dy = vector_field(x, y,new_pol)
+        #print('dx',dx,'dy',dy)
         x += dx * dt
         y += dy * dt
         X.append(x.copy())
@@ -382,18 +278,13 @@ transition = lambda mode,x,objs,atts: automaton_scoop(mode,x,objs,atts)
         return line,
 
     # Create the animation
-    ani = FuncAnimation(fig, update, frames=int(T/dt), blit=True,interval = 50)
+    #ani = FuncAnimation(fig, update, frames=int(T/dt), blit=True,interval = 50)
 
     # Show the animation
-    plt.show()
-"""
-T = 50
-dt = 0.01
-x0 = opt_sim["start"][0]
-y0 = opt_sim["start"][1]
-x = x0
-y = y0
-X = [x0]
-Y = [y0]
-transition = lambda mode,x,objs,atts: automaton_scoop(mode,x,objs,atts)
-fig,ax,_, new_pol = start_simulation_ltl(ds_debug,transition, opt_sim)
+    #plt.show()
+    frame = 0
+    while True:
+        update(frame)
+        plt.draw()
+        plt.pause(0.01)
+        frame += 1
