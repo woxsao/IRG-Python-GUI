@@ -2,17 +2,9 @@ from matplotlib.patches import Rectangle
 import numpy as np
 import matplotlib.pyplot as plt
 import time 
-from matplotlib.widgets import Button
 import os
 import glob
-import csv
-from scipy.interpolate import interp2d
-from scipy.interpolate  import griddata
 from scipy.io import loadmat
-import math
-import sys
-from scipy.stats import multivariate_normal
-from matplotlib.animation import FuncAnimation
 import copy
 
 
@@ -179,6 +171,7 @@ def start_simulation_ltl(policies, transition, opt_sim):
     fig, ax = plot_ap()
     hs = []
     #curr_mode, task_succ, target_mode= transition(curr_mode, start, objs, atts)
+    objs.append(objs[-1])
     hs,vec_field = plot_multi_mode(hs,policies[curr_mode-1],[-8,8,-8,8],atts[curr_mode-1],[],[],[])
     time_step = 1
     start = np.reshape(start,(2,1))
@@ -219,9 +212,12 @@ def start_simulation_ltl(policies, transition, opt_sim):
                 hs = plot_multi_mode([], mod_policies[next_mode-1], limits, atts[next_mode-1],"visited","failure","cut normals")
                 #print("MDOE TRANSITIONONONONON")
                 curr_mode = next_mode
+        else:
+            time_step = -100
         plt.draw()
         plt.pause(0.01)
         time_step +=1
+    print("out!")
     return fig,ax, vec_field,policies[curr_mode-1]
 def inap(x, obj, att):
     pos = obj["pos"]
@@ -248,7 +244,6 @@ def automaton_scoop(curr_mode, x, objs, atts):
     desired_plan = [2, 3, 4, 4]
     sensor = 1
     task_succ = 0
-  
     for i in range(1,len(objs)):
         if inap(x, objs[i-1], atts[i-1]):
             sensor = i+1
@@ -360,33 +355,6 @@ opt_sim["add_noise"] = 0
 
 transition = lambda mode,x,objs,atts: automaton_scoop(mode,x,objs,atts)
 
-"""for i in range(len(ds_debug)):
-    T = 50
-    dt = 0.01
-    x0 = opt_sim["start"][0]
-    y0 = opt_sim["start"][1]
-    x = x0
-    y = y0
-    X = [x0]
-    Y = [y0]
-    fig,ax,_, new_pol = start_simulation_ltl(ds_debug,transition, opt_sim)
-    line, = ax.plot(X, Y, 'g', lw=2)
-    def update(frame):
-        global x, y, X, Y, new_pol
-        dx, dy = vector_field(x, y,new_pol)
-        x += dx * dt
-        y += dy * dt
-        X.append(x.copy())
-        Y.append(y.copy())
-        line.set_data(X[:frame], Y[:frame])
-        return line,
-
-    # Create the animation
-    ani = FuncAnimation(fig, update, frames=int(T/dt), blit=True,interval = 50)
-
-    # Show the animation
-    plt.show()
-"""
 T = 50
 dt = 0.01
 x0 = opt_sim["start"][0]
@@ -395,5 +363,4 @@ x = x0
 y = y0
 X = [x0]
 Y = [y0]
-transition = lambda mode,x,objs,atts: automaton_scoop(mode,x,objs,atts)
 fig,ax,_, new_pol = start_simulation_ltl(ds_debug,transition, opt_sim)
