@@ -18,7 +18,7 @@
 - Run the learning/load segments!
 
 ## Simulation how to:
-###Matlab end:
+### Matlab end:
 - Current state of the code doesn't support learning the policy, so the dsltl Matlab code is needed for the policy generation. 
 - To do this, go to dsltl code, run the section that Learns the DS. (assuming you have generated the trajectories already through python/matlab file reshape).
 ### Python end: 
